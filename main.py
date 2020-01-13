@@ -15,8 +15,8 @@ def main():
         if epoch % args.eval_interval == (args.eval_interval - 1):
             trainer.run_epoch(epoch, split=VAL)
 
-    trainer.run_epoch(trainer.args.epochs, split=VISUALIZATION)
-    trainer.summary.writer.add_scalar('val/best_result', trainer.best_loss, args.epochs)
+    trainer.run_epoch(trainer.args.epochs, split=VAL)
+    trainer.summary.writer.add_scalar('val/best_result', trainer.best_acc, args.epochs)
     trainer.summary.writer.close()
     trainer.save_network()
 

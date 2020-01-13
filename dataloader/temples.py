@@ -3,7 +3,8 @@ from PIL import Image
 from torch.utils import data
 import torchvision.transforms as standard_transforms
 import itertools
-import sklearn
+import sklearn.model_selection as model_selection
+import sklearn.utils.class_weight as class_weight
 import numpy as np
 import torch
 
@@ -21,13 +22,8 @@ class Temples(data.Dataset):
 
     def __init__(self, args, split=TRAINVAL):
         self.args = args
-        self.split = split
-
-        if split == TRAINVAL:
-            self.dataset = self.make_dataset()
-        else:
-            raise NotImplementedError()
-            self.dataset = self.make_dataset()
+        self.split = TRAINVAL # hardcoded for retrieving the files
+        self.dataset = self.make_dataset(split)
 
         if len(self.dataset) == 0:
             raise RuntimeError('Found 0 images, please check the dataset')
@@ -58,14 +54,13 @@ class Temples(data.Dataset):
 
     def get_class_weights(self):
         y_train = [item[1] for item in self.dataset]
-        class_weights = sklearn.utils.class_weight.compute_class_weight('balanced', np.unique(y_train), y_train)
+        class_weights = class_weight.compute_class_weight('balanced', np.unique(y_train), y_train)
 
         return class_weights
 
-    def make_dataset(self):
+    def make_dataset(self, split):
         current_dir = os.path.dirname(__file__)
         dataset_path = os.path.join(current_dir, self.ROOT, self.DATASET, self.split)
-
 
         classes = os.listdir(dataset_path)
         items = []
@@ -78,6 +73,17 @@ class Temples(data.Dataset):
             items.append(class_items)
 
         items = list(itertools.chain.from_iterable(items))
+
+        if split != TRAINVAL:
+            x= [item[0] for item in items]
+            y = [item[1] for item in items]
+            x_train, x_val, y_train, y_val = model_selection.train_test_split(x, y, random_state=42, test_size=0.15)
+
+            if split == TRAIN:
+                items = [(x_train[i], y_train[i]) for i in range(len(x_train))]
+            elif split == VAL:
+                items = [(x_val[i], y_val[i]) for i in range(len(x_val))]
+
         return items
 
     def get_transforms(self):
@@ -90,7 +96,6 @@ class Temples(data.Dataset):
                 standard_transforms.ToTensor(),
                 #standard_transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010)),
                 standard_transforms.RandomErasing(),
-
             ])
         elif self.split == VAL or self.split == TEST:
             transforms = standard_transforms.Compose([

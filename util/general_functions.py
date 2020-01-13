@@ -44,6 +44,8 @@ def get_class_weights(args):
 def get_loss_function(args, weights):
     if not args.use_class_weights:
         weights = None
+    else:
+        weights = torch.Tensor(weights).cuda() if torch.cuda.is_available() else torch.Tensor(weights)
 
     if args.loss_type == CE_LOSS:
         loss = torch.nn.CrossEntropyLoss(weight=weights)

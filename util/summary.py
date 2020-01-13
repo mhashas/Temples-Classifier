@@ -87,7 +87,7 @@ class TensorboardSummary(object):
         if not os.path.isdir(path):
             os.makedirs(path)
 
-        torch.save(model.state_dict(), path + '/' + 'network.pth')
+        torch.save(model.state_dict(), path + '/' + self.args.model + '_pretrained:' + str(self.args.pretrained) + '.pth')
 
     def get_step(self, split):
         if split == 'train':

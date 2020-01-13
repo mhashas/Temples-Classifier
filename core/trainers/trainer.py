@@ -22,7 +22,7 @@ class Trainer(object):
         if args.trainval:
             self.train_loader = make_data_loader(args, TRAINVAL)
         else:
-            self.train_loader, self.test_loader = make_data_loader(args, TRAIN)
+            self.train_loader, self.val_loader = make_data_loader(args, TRAIN), make_data_loader(args, VAL)
 
         self.criterion = get_loss_function(args, self.weights)
         self.scheduler = LR_Scheduler(args.lr_policy, args.lr, args.epochs, len(self.train_loader))
@@ -64,8 +64,8 @@ class Trainer(object):
                 loss = self.criterion(output, target)
 
                 # Show 10 * 3 inference results each epoch
-                if i % (num_img // 10) == 0:
-                    self.summary.visualize_image(image, target, output, split=split)
+                #if i % (num_img // 10) == 0:
+                #    self.summary.visualize_image(image, target, output, split=split)
 
                 if split == TRAIN:
                     loss.backward()
@@ -88,7 +88,7 @@ class Trainer(object):
         accuracy, balanced_accuracy, recall, precision, f1, roc_auc = calculate_metrics(targets, predictions, outputs)
         self.summary.add_results(loss, accuracy, balanced_accuracy, recall, precision, f1, roc_auc)
 
-        if accuracy < self.best_acc:
+        if accuracy > self.best_acc:
             self.best_acc = accuracy
 
         print('[Epoch: %d, numImages: %5d]' % (epoch, i * self.args.batch_size + image.data.shape[0]))
