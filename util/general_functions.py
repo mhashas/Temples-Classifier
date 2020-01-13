@@ -28,14 +28,20 @@ def make_data_loader(args, split=TRAIN):
         loader = DataLoader(trainval_set, batch_size=args.batch_size, num_workers=8, shuffle=True)
     else:
         set = Temples(args, split=split)
-        loader = DataLoader(set, batch_size=args.batch_size, num_workers=8, shuffle=True)
+        if split == TRAIN:
+            loader = DataLoader(set, batch_size=args.batch_size, num_workers=8, shuffle=True)
+        else:
+            loader = DataLoader(set, batch_size=args.batch_size, num_workers=8, shuffle=False)
 
     return loader
 
 def get_class_weights(args):
     weights = None
     if args.dataset == TEMPLES_DATASET:
-        weights = Temples.CLASS_WEIGHTS
+        if args.trainval:
+            weights = Temples.TRAINVAL_CLASS_WEIGHTS
+        else:
+            weights = Temples.TRAIN_CLASS_WEIGHTS
     else:
         raise NotImplementedError()
 

@@ -17,12 +17,13 @@ class Trainer(object):
         self.model = Classifier(args)
         self.optimizer = get_optimizer(self.model, args)
         self.summary = TensorboardSummary(args)
-        self.weights = get_class_weights(args)
 
         if args.trainval:
             self.train_loader = make_data_loader(args, TRAINVAL)
         else:
             self.train_loader, self.val_loader = make_data_loader(args, TRAIN), make_data_loader(args, VAL)
+
+        self.weights = get_class_weights(args)
 
         self.criterion = get_loss_function(args, self.weights)
         self.scheduler = LR_Scheduler(args.lr_policy, args.lr, args.epochs, len(self.train_loader))
@@ -62,11 +63,6 @@ class Trainer(object):
                         output = self.model(image)
 
                 loss = self.criterion(output, target)
-
-                # Show 10 * 3 inference results each epoch
-                #if i % (num_img // 10) == 0:
-                #    self.summary.visualize_image(image, target, output, split=split)
-
                 if split == TRAIN:
                     loss.backward()
 
@@ -85,8 +81,12 @@ class Trainer(object):
                 predictions.extend(torch.argmax(output, dim=1).cpu().numpy())
                 targets.extend(target.cpu().numpy())
 
+                # Show 10 * 3 inference results each epoch
+                if i % (num_img // 10) == 0:
+                   self.summary.visualize_image(image, F.softmax(output, dim=1), target, split=split)
+
         accuracy, balanced_accuracy, recall, precision, f1, roc_auc = calculate_metrics(targets, predictions, outputs)
-        self.summary.add_results(loss, accuracy, balanced_accuracy, recall, precision, f1, roc_auc)
+        self.summary.add_results(epoch, loss, accuracy, balanced_accuracy, recall, precision, f1, roc_auc, split=split)
 
         if accuracy > self.best_acc:
             self.best_acc = accuracy

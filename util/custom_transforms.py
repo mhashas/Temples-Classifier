@@ -52,6 +52,21 @@ class Normalize(object):
 
         return img
 
+class RandomRotate(object):
+    """Randomly rotates a tensor
+    Args:
+        p (int): probability to rotate image
+    """
+    def __init__(self, p):
+        self.angles = [0, 90, 180, 270]
+        self.probs = [1 - p, p / 3, p / 3, p / 3]
+
+    def __call__(self, img):
+        angle = np.random.choice(self.angles, p=self.probs)
+        img = F.rotate(img, angle)
+
+        return img
+
 class ColorJitter(object):
     """Randomly change the brightness, contrast and saturation of an image.
 

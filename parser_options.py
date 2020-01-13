@@ -18,7 +18,7 @@ class ParserOptions():
         parser.add_argument('--use_class_weights', type=int, default=1, choices=[0,1], help='if we should use class weights to deal with imbalanced dataset')
         parser.add_argument('--norm_layer', type=str, default=BATCH_NORM, choices=[INSTANCE_NORM, BATCH_NORM, SYNC_BATCH_NORM])
         parser.add_argument('--init_type', type=str, default=NORMAL_INIT, choices=[NORMAL_INIT, KAIMING_INIT, XAVIER_INIT, ORTHOGONAL_INIT])
-        parser.add_argument('--batch_size', type=int, default=2, metavar='N', help='input batch size for training (default: 2)')
+        parser.add_argument('--batch_size', type=int, default=8, metavar='N', help='input batch size for training (default: 2)')
         parser.add_argument('--optim', type=str, default=ADAM, choices=[SGD, ADAM, RMSPROP, AMSGRAD, ADABOUND])
         parser.add_argument('--lr', type=float, default=0.0001, metavar='LR', help='learning rate (default: auto)')
         parser.add_argument('--lr_policy', type=str, default='poly', choices=['poly', 'step', 'cos', 'linear'], help='lr scheduler mode: (default: poly)')
@@ -28,6 +28,7 @@ class ParserOptions():
 
         # training specific
         parser.add_argument('--resize', type=str, default='256,256', help='image resize: h,w')
+        parser.add_argument('--crop_size', type=str, default='224,224', help='image crop size: h,w')
         parser.add_argument('--start_epoch', type=int, default=0, metavar='N', help='starting epoch')
         parser.add_argument('--epochs', type=int, default=100, metavar='N', help='number of epochs to train (default: auto)')
         parser.add_argument('--eval-interval', type=int, default=1, help='evaluation interval (default: 1)')
@@ -52,10 +53,9 @@ class ParserOptions():
         if args.debug:
             args.results_dir = 'results_dummy'
 
-        if args.resize:
-            args.resize = tuple([int(x) for x in args.resize.split(',')])
 
-        args.num_downs = int(math.log(args.resize[0])/math.log(2))
+        args.resize = tuple([int(x) for x in args.resize.split(',')])
+        args.crop_size = tuple([int(x) for x in args.crop_size.split(',')])
         args.cuda = torch.cuda.is_available()
         args.gpu_ids = os.environ['CUDA_VISIBLE_DEVICES'] if ('CUDA_VISIBLE_DEVICES' in os.environ) else ''
         args.gpu_ids = list(range(len(args.gpu_ids.split(',')))) if (',' in args.gpu_ids and args.cuda) else None

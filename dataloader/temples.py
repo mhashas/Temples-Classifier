@@ -15,7 +15,8 @@ class Temples(data.Dataset):
 
     NUM_CLASSES = 11
     CLASSES = ['Armenia', 'Australia', 'Germany', 'Hungary+Slovakia+Croatia', 'Indonesia-Bali', 'Japan', 'Malaysia+Indonesia', 'Portugal+Brazil', 'Russia', 'Spain', 'Thailand']
-    CLASS_WEIGHTS = [5.90082645, 1.85454545, 0.60662702, 1.32467532, 1.44242424, 1.04692082, 1.18016529, 1.2020202,  0.52346041, 0.95454545, 0.62412587]
+    TRAINVAL_CLASS_WEIGHTS = [5.90082645, 1.85454545, 0.60662702, 1.32467532, 1.44242424, 1.04692082, 1.18016529, 1.2020202,  0.52346041, 0.95454545, 0.62412587]
+    TRAIN_CLASS_WEIGHTS = [6.12121212, 1.66942149, 0.64059197, 1.25206612, 1.44976077, 1.00165289, 1.25206612, 1.172147, 0.50542118, 1.00165289, 0.64059197]
     ROOT = '../../'
     DATASET = 'dataset'
 
@@ -44,13 +45,6 @@ class Temples(data.Dataset):
         label = torch.Tensor([label]).long()
 
         return image, label
-
-    def make_dataset_from_file(self, file):
-        items = []
-
-        # @TODO read split from file
-
-        return items
 
     def get_class_weights(self):
         y_train = [item[1] for item in self.dataset]
@@ -89,9 +83,9 @@ class Temples(data.Dataset):
     def get_transforms(self):
         if self.split == TRAIN or self.split == TRAINVAL:
             transforms = standard_transforms.Compose([
-                standard_transforms.RandomResizedCrop(size=self.args.resize),
-                #standard_transforms.Resize(self.args.resize),
-                standard_transforms.RandomRotation(degrees=180),
+                standard_transforms.Resize(self.args.resize),
+                standard_transforms.RandomResizedCrop(size=self.args.crop_size),
+                custom_transforms.RandomRotate(0.4),
                 custom_transforms.RandomGaussianBlur(),
                 standard_transforms.ToTensor(),
                 #standard_transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010)),
@@ -100,6 +94,7 @@ class Temples(data.Dataset):
         elif self.split == VAL or self.split == TEST:
             transforms = standard_transforms.Compose([
                 standard_transforms.Resize(self.args.resize),
+                standard_transforms.CenterCrop(self.args.crop_size),
                 standard_transforms.ToTensor(),
                 # standard_transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010)),
             ])
