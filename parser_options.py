@@ -12,7 +12,7 @@ class ParserOptions():
         parser = argparse.ArgumentParser(description='PyTorch Semantic Video Segmentation training')
 
         # model specific
-        parser.add_argument('--model', type=str, default=VGG_19, choices=[RESNET, RESNET_50, PSPNET, PSPNET_50, VGG_16, VGG_19], help='model name (default:' + RESNET + ')')
+        parser.add_argument('--model', type=str, default=RESNET_50, choices=[RESNET, RESNET_50, PSPNET, PSPNET_50, VGG_16, VGG_19], help='model name (default:' + RESNET + ')')
         parser.add_argument('--dataset', type=str, default=TEMPLES_DATASET, choices=[TEMPLES_DATASET], help='dataset name (default:' + TEMPLES_DATASET + ')')
         parser.add_argument('--loss_type', type=str, default=CE_LOSS, choices=[CE_LOSS], help='loss func type (default:' + CE_LOSS + ')')
         parser.add_argument('--use_class_weights', type=int, default=1, choices=[0,1], help='if we should use class weights to deal with imbalanced dataset')
@@ -30,24 +30,17 @@ class ParserOptions():
         parser.add_argument('--resize', type=str, default='256,256', help='image resize: h,w')
         parser.add_argument('--crop_size', type=str, default='224,224', help='image crop size: h,w')
         parser.add_argument('--start_epoch', type=int, default=0, metavar='N', help='starting epoch')
-        parser.add_argument('--epochs', type=int, default=100, metavar='N', help='number of epochs to train (default: auto)')
+        parser.add_argument('--epochs', type=int, default=200, metavar='N', help='number of epochs to train (default: auto)')
         parser.add_argument('--eval-interval', type=int, default=1, help='evaluation interval (default: 1)')
         parser.add_argument('--trainval', type=int, default=0, choices=[0,1], help='determines whether whe should use validation images as well for training')
-        parser.add_argument('--debug', type=int, default=1)
+        parser.add_argument('--debug', type=int, default=0)
         parser.add_argument('--results_root', type=str, default='..')
-        parser.add_argument('--results_dir', type=str, default='results_im2im', help='models are saved here')
+        parser.add_argument('--results_dir', type=str, default='results_good_val', help='models are saved here')
         parser.add_argument('--save_dir', type=str, default='saved_models')
 
-        # deeplab specific
-        parser.add_argument('--pretrained', type=int, default=0, choices=[0,1], help='if we should use pretrained network or not')
-        parser.add_argument('--output_stride', type=int, default=16, help='network output stride (default: 16)')
-
-        # unet specific
-        parser.add_argument('--num_downs', type=int, default=8, help='number of unet encoder-decoder blocks')
-        parser.add_argument('--ngf', type=int, default=128, help='# of gen filters in the last conv layer')
-        parser.add_argument('--down_type', type=str, default=MAXPOOL, choices=[STRIDECONV, MAXPOOL], help='method to reduce feature map size')
-        parser.add_argument('--dropout', type=float, default=0.2)
-
+        parser.add_argument('--pretrained', type=int, default=1, choices=[0,1], help='if we should use pretrained network or not')
+        parser.add_argument('--normalize_input', type=int, default=0, choices=[0,1], help='if we should normalize the images with the imagenet mean and std')
+        parser.add_argument('--random_erasing', type=int, default=1, choices=[0,1], help='if we should use random erasing as part of our preprocessing')
         args = parser.parse_args()
 
         if args.debug:

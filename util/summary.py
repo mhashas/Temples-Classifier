@@ -8,6 +8,7 @@ import matplotlib
 import matplotlib.pyplot as plt
 
 from dataloader.temples import Temples
+from constants import *
 
 class TensorboardSummary(object):
 
@@ -17,27 +18,21 @@ class TensorboardSummary(object):
         self.writer = SummaryWriter(log_dir=os.path.join(self.experiment_dir))
 
         self.train_step = 0
-        self.test_step = 0
+        self.val_step = 0
 
     def generate_directory(self, args):
         checkname = 'debug' if args.debug else ''
         checkname += args.model
-
-        if 'deeplab' in args.model:
-            checkname += '-pretrained' if args.pretrained else ''
-            checkname += '-os_' + str(args.output_stride)
-
-        if 'unet' in args.model:
-            checkname += '-numdowns_' + str(args.num_downs) + '-ngf_' + str(args.ngf) + '-downtype_' + str(args.down_type)
-
-        checkname += '-inittype_' + args.init_type
+        checkname += '-pretrained' if args.pretrained else '-inittype_' + args.init_type
+        checkname += '-imagenet_normalized' if args.normalize_input else ''
+        checkname += '-random_erasing' if args.random_erasing else ''
         checkname += '-optim_' + args.optim + '-lr_' + str(args.lr)
+        checkname += '-weighted' if args.use_class_weights else ''
+        checkname += '-resize_' + ','.join([str(x) for x in list(args.resize)])
 
         if args.clip > 0:
             checkname += '-clipping_' + str(args.clip)
 
-        if args.resize:
-            checkname += '-resize_' + ','.join([str(x) for x in list(args.resize)])
         checkname += '-epochs_' + str(args.epochs)
         checkname += '-trainval' if args.trainval else ''
 
@@ -101,12 +96,18 @@ class TensorboardSummary(object):
         if not os.path.isdir(path):
             os.makedirs(path)
 
-        torch.save(model.state_dict(), path + '/' + self.args.model + '_pretrained:' + str(self.args.pretrained) + '.pth')
+        model_name = self.args.model
+        model_name += '_pretrained' if self.args.pretrained else ''
+        model_name += '_normalized' if self.args.normalize_input else ''
+        model_name += '_random_erasing' if self.args.random_erasing else ''
+        model_name += '_weighed' if self.args.use_class_weights else ''
+
+        torch.save(model.state_dict(), path + '/' + model_name)
 
     def get_step(self, split):
-        if split == 'train':
+        if split == TRAIN:
             self.train_step += 1
             return self.train_step
-        elif split == 'test':
-            self.test_step += 1
-            return self.test_step
+        elif split == VAL:
+            self.val_step += 1
+            return self.val_step

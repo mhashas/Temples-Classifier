@@ -51,7 +51,7 @@ class Classifier(nn.Module):
             layers.append(nn.Dropout())
 
         if feature_maps_size < 4096:
-            layers.append(nn.Linear(feature_maps_size, num_classes))
+            layers.append(nn.Linear(feature_maps_size, num_classes)) # @TODO RADU make more extensive classifier?
         else:
             layers.append(nn.Linear(4096, 4096))
             layers.append(nn.ReLU())

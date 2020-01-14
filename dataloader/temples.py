@@ -25,6 +25,7 @@ class Temples(data.Dataset):
         self.args = args
         self.split = TRAINVAL # hardcoded for retrieving the files
         self.dataset = self.make_dataset(split)
+        self.split = split
 
         if len(self.dataset) == 0:
             raise RuntimeError('Found 0 images, please check the dataset')
@@ -82,22 +83,29 @@ class Temples(data.Dataset):
 
     def get_transforms(self):
         if self.split == TRAIN or self.split == TRAINVAL:
-            transforms = standard_transforms.Compose([
+            transforms = [
                 standard_transforms.Resize(self.args.resize),
                 standard_transforms.RandomResizedCrop(size=self.args.crop_size),
                 custom_transforms.RandomRotate(0.4),
                 custom_transforms.RandomGaussianBlur(),
                 standard_transforms.ToTensor(),
-                #standard_transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010)),
-                standard_transforms.RandomErasing(),
-            ])
+            ]
+            if self.args.normalize_input:
+                transforms.append(standard_transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010)))
+            if self.args.random_erasing:
+                transforms.append(standard_transforms.RandomErasing())
+
+            transforms = standard_transforms.Compose(transforms)
         elif self.split == VAL or self.split == TEST:
-            transforms = standard_transforms.Compose([
+            transforms = [
                 standard_transforms.Resize(self.args.resize),
                 standard_transforms.CenterCrop(self.args.crop_size),
                 standard_transforms.ToTensor(),
-                # standard_transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010)),
-            ])
+            ]
+            if self.args.normalize_input:
+                transforms.append(standard_transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010)))
+
+            transforms = standard_transforms.Compose(transforms)
         else:
             raise RuntimeError('Invalid dataset mode')
 

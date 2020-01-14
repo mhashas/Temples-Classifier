@@ -3,7 +3,7 @@ import torch
 import torch.nn.functional as F
 
 from core.models.classifier import Classifier
-from util.general_functions import get_optimizer, make_data_loader, get_loss_function, get_class_weights, calculate_metrics
+from util.general_functions import get_optimizer, make_data_loader, get_loss_function, get_class_weights, calculate_metrics, init_model
 from util.lr_scheduler import LR_Scheduler
 from util.summary import TensorboardSummary
 from constants import *
@@ -15,6 +15,8 @@ class Trainer(object):
         self.best_acc = 0
 
         self.model = Classifier(args)
+        if not args.pretrained:
+            self.model = init_model(self.model, args.init_type)
         self.optimizer = get_optimizer(self.model, args)
         self.summary = TensorboardSummary(args)
 
@@ -24,7 +26,6 @@ class Trainer(object):
             self.train_loader, self.val_loader = make_data_loader(args, TRAIN), make_data_loader(args, VAL)
 
         self.weights = get_class_weights(args)
-
         self.criterion = get_loss_function(args, self.weights)
         self.scheduler = LR_Scheduler(args.lr_policy, args.lr, args.epochs, len(self.train_loader))
 
@@ -53,9 +54,8 @@ class Trainer(object):
                 if self.args.cuda:
                     image, target = image.cuda(), target.cuda()
 
-                self.scheduler(self.optimizer, i, epoch, self.best_acc)
-
                 if split == TRAIN:
+                    self.scheduler(self.optimizer, i, epoch, self.best_acc)
                     self.optimizer.zero_grad()
                     output = self.model(image)
                 else:
@@ -88,7 +88,7 @@ class Trainer(object):
         accuracy, balanced_accuracy, recall, precision, f1, roc_auc = calculate_metrics(targets, predictions, outputs)
         self.summary.add_results(epoch, loss, accuracy, balanced_accuracy, recall, precision, f1, roc_auc, split=split)
 
-        if accuracy > self.best_acc:
+        if split != TRAIN and accuracy > self.best_acc:
             self.best_acc = accuracy
 
         print('[Epoch: %d, numImages: %5d]' % (epoch, i * self.args.batch_size + image.data.shape[0]))

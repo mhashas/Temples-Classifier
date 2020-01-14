@@ -34,6 +34,30 @@ class RandomGaussianBlur(object):
             return image, label
         return image
 
+class RandomCrop(object):
+    def __init__(self, size, padding=0):
+        self.size = size
+        self.padding = padding
+
+    def __call__(self, images):
+        if self.padding > 0:
+            images = [ImageOps.expand(image, border=self.padding, fill=0) for image in images]
+
+        img = images[0]
+        w, h = img.size
+        tw, th = self.size
+
+        if w == tw and h == th:
+            return images
+        if w < tw or h < th:
+            return [image.resize((tw, th), Image.BILINEAR) for image in images]
+
+        x1 = random.randint(0, w - tw)
+        y1 = random.randint(0, h - th)
+
+        cropped_images = [image.crop((x1, y1, x1 + tw, y1 + th)) for image in images]
+        return cropped_images
+
 class Normalize(object):
     """Normalize a tensor image with mean and standard deviation.
     Args:

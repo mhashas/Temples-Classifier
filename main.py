@@ -16,7 +16,7 @@ def main():
             trainer.run_epoch(epoch, split=VAL)
 
     trainer.run_epoch(trainer.args.epochs, split=VAL)
-    trainer.summary.writer.add_scalar('val/best_result', trainer.best_acc, args.epochs)
+    trainer.summary.writer.add_scalar('val/best_acc', trainer.best_acc, args.epochs)
     trainer.summary.writer.close()
     trainer.save_network()
 

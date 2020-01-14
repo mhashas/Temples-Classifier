@@ -2,7 +2,6 @@ import torch
 import torch.nn as nn
 import torch.optim as optim
 from torch.utils.data import DataLoader
-import numpy as np
 import sklearn.metrics as metrics
 
 from dataloader.temples import Temples
@@ -17,21 +16,15 @@ def make_data_loader(args, split=TRAIN):
         init_type (str)    -- the name of an initialization method: normal | xavier | kaiming | orthogonal
         gain (float)       -- scaling factor for normal, xavier and orthogonal.
     """
-
-    # txt files exit?
-        # load text files
-    # else
-        # generate txt files with train, val
-
     if split == TRAINVAL:
         trainval_set = Temples(args, split=TRAINVAL)
-        loader = DataLoader(trainval_set, batch_size=args.batch_size, num_workers=8, shuffle=True)
+        loader = DataLoader(trainval_set, batch_size=args.batch_size, num_workers=2, shuffle=True)
     else:
         set = Temples(args, split=split)
         if split == TRAIN:
-            loader = DataLoader(set, batch_size=args.batch_size, num_workers=8, shuffle=True)
+            loader = DataLoader(set, batch_size=args.batch_size, num_workers=1, shuffle=True)
         else:
-            loader = DataLoader(set, batch_size=args.batch_size, num_workers=8, shuffle=False)
+            loader = DataLoader(set, batch_size=args.batch_size, num_workers=1, shuffle=False)
 
     return loader
 
@@ -162,47 +155,16 @@ def calculate_metrics(targets, predictions, outputs):
 
     return accuracy, balanced_accuracy, recall, precision, f1, roc_auc
 
-
-def tensor2im(input_image, imtype=np.uint8, return_tensor=True):
-    """"Converts a Tensor array into a numpy image array.
-
-    Parameters:
-        input_image (tensor) --  the input image tensor array
-        imtype (type)        --  the desired type of the converted numpy array
-    """
-    if not isinstance(input_image, np.ndarray):
-        if isinstance(input_image, torch.Tensor):  # get the data from a variable
-            image_tensor = input_image.data
-        else:
-            return input_image
-        image_numpy = image_tensor.cpu().float().numpy()  # convert it into a numpy array
-        if image_numpy.ndim == 3:
-            image_numpy = (image_numpy - np.min(image_numpy))/(np.max(image_numpy)-np.min(image_numpy))
-        if image_numpy.shape[0] == 1:  # grayscale to RGB
-            image_numpy = np.tile(image_numpy, (3, 1, 1))
-        image_numpy = (image_numpy + 1) / 2.0 * 255.0  # post-processing: tranpose and scaling
-    else:  # if it is a numpy array, do nothing
-        image_numpy = input_image
-
-    return torch.from_numpy(image_numpy.astype(imtype)) if return_tensor else np.transpose(image_numpy, (1,2,0))
-
 def print_training_info(args):
-    if 'unet' in args.model:
-        print('Ngf', args.ngf)
-        print('Num downs', args.num_downs)
-        print('Down type', args.down_type)
-
-    if 'deeplab' in args.model:
-        print('Pretrained', args.pretrained)
-        print('Output stride', args.output_stride)
-
+    print('Pretrained', args.pretrained)
     print('Optimizer', args.optim)
     print('Learning rate', args.lr)
-
     if args.clip > 0:
         print('Gradient clip', args.clip)
-
     print('Resize', args.resize)
+    print('Weighted', args.use_class_weights)
+    print('Normalizing input', args.normalize_input)
+    print('Random erasing', args.random_erasing)
     print('Batch size', args.batch_size)
     print('Norm layer', args.norm_layer)
     print('Using cuda', torch.cuda.is_available())
