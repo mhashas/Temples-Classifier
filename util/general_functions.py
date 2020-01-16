@@ -155,6 +155,12 @@ def calculate_metrics(targets, predictions, outputs):
 
     return accuracy, balanced_accuracy, recall, precision, f1, roc_auc
 
+def unormalize_imagenet_tensor(images):
+    for image in images:
+        for t, m, s in zip(image, (0.485, 0.456, 0.406), (0.229, 0.224, 0.225)):
+            t.mul_(s).add_(m)
+    return images
+
 def print_training_info(args):
     print('Pretrained', args.pretrained)
     print('Optimizer', args.optim)

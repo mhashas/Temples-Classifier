@@ -40,12 +40,11 @@ class ParserOptions():
 
         parser.add_argument('--pretrained', type=int, default=1, choices=[0,1], help='if we should use pretrained network or not')
         parser.add_argument('--normalize_input', type=int, default=0, choices=[0,1], help='if we should normalize the images with the imagenet mean and std')
-        parser.add_argument('--random_erasing', type=int, default=1, choices=[0,1], help='if we should use random erasing as part of our preprocessing')
+        parser.add_argument('--random_erasing', type=int, default=0, choices=[0,1], help='if we should use random erasing as part of our preprocessing')
         args = parser.parse_args()
 
         if args.debug:
             args.results_dir = 'results_dummy'
-
 
         args.resize = tuple([int(x) for x in args.resize.split(',')])
         args.crop_size = tuple([int(x) for x in args.crop_size.split(',')])

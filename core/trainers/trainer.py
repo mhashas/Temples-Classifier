@@ -1,6 +1,7 @@
 from tqdm import tqdm
 import torch
 import torch.nn.functional as F
+import copy
 
 from core.models.classifier import Classifier
 from util.general_functions import get_optimizer, make_data_loader, get_loss_function, get_class_weights, calculate_metrics, init_model
@@ -13,8 +14,9 @@ class Trainer(object):
     def __init__(self, args):
         self.args = args
         self.best_acc = 0
-
         self.model = Classifier(args)
+        self.best_model = copy.deepcopy(self.model)
+
         if not args.pretrained:
             self.model = init_model(self.model, args.init_type)
         self.optimizer = get_optimizer(self.model, args)
@@ -90,12 +92,12 @@ class Trainer(object):
 
         if split != TRAIN and accuracy > self.best_acc:
             self.best_acc = accuracy
+            self.best_model = copy.deepcopy(self.model)
 
         print('[Epoch: %d, numImages: %5d]' % (epoch, i * self.args.batch_size + image.data.shape[0]))
 
-
     def save_network(self):
-        self.summary.save_network(self.model)
+        self.summary.save_network(self.best_model)
 
     def load_network(self, args):
         self.model = Classifier(args)

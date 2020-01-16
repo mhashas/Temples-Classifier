@@ -1,14 +1,13 @@
 import os
 import torch
-from torchvision.utils import make_grid
 from torch.utils.tensorboard import SummaryWriter
 import glob
 import numpy as np
-import matplotlib
 import matplotlib.pyplot as plt
 
 from dataloader.temples import Temples
 from constants import *
+from util.general_functions import unormalize_imagenet_tensor
 
 class TensorboardSummary(object):
 
@@ -24,8 +23,8 @@ class TensorboardSummary(object):
         checkname = 'debug' if args.debug else ''
         checkname += args.model
         checkname += '-pretrained' if args.pretrained else '-inittype_' + args.init_type
-        checkname += '-imagenet_normalized' if args.normalize_input else ''
-        checkname += '-random_erasing' if args.random_erasing else ''
+        checkname += '-normed' if args.normalize_input else ''
+        checkname += '-re' if args.random_erasing else ''
         checkname += '-optim_' + args.optim + '-lr_' + str(args.lr)
         checkname += '-weighted' if args.use_class_weights else ''
         checkname += '-resize_' + ','.join([str(x) for x in list(args.resize)])
@@ -67,9 +66,11 @@ class TensorboardSummary(object):
         if one_channel:
             plt.imshow(npimg, cmap="Greys")
         else:
-            plt.imshow(np.transpose(npimg, (1, 2, 0)))
+            plt.imshow(np.transpose(npimg, (1, 2, 0)).astype('uint8'))
 
     def visualize_image(self, images, outputs, targets, split="train"):
+        #if self.args.normalize_input:
+        #    images = unormalize_imagenet_tensor(images)
         targets = targets.cpu().numpy()
         images = images.cpu().numpy()
         fig = plt.figure(figsize=(12, 12))
@@ -91,18 +92,12 @@ class TensorboardSummary(object):
         self.writer.add_figure(split + '/ZZ Image', fig, step)
 
     def save_network(self, model):
-        path = self.args.save_dir + '/' + self.experiment_dir.replace('./', '')
+        path = self.experiment_dir[self.experiment_dir.find(self.args.results_dir):].replace(self.args.results_dir, self.args.save_dir)
 
         if not os.path.isdir(path):
             os.makedirs(path)
 
-        model_name = self.args.model
-        model_name += '_pretrained' if self.args.pretrained else ''
-        model_name += '_normalized' if self.args.normalize_input else ''
-        model_name += '_random_erasing' if self.args.random_erasing else ''
-        model_name += '_weighed' if self.args.use_class_weights else ''
-
-        torch.save(model.state_dict(), path + '/' + model_name)
+        torch.save(model.state_dict(), path + '/model.pth')
 
     def get_step(self, split):
         if split == TRAIN:
