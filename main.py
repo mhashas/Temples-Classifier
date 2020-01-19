@@ -10,13 +10,19 @@ def main():
     print_training_info(args)
 
     for epoch in range(trainer.args.start_epoch, trainer.args.epochs):
-        trainer.run_epoch(epoch, split=TRAIN)
 
-        if epoch % args.eval_interval == (args.eval_interval - 1):
-            trainer.run_epoch(epoch, split=VAL)
+        if args.trainval:
+            trainer.run_epoch(epoch, split=TRAINVAL)
+        else:
+            trainer.run_epoch(epoch, split=TRAIN)
 
-    trainer.run_epoch(trainer.args.epochs, split=VAL)
-    trainer.summary.writer.add_scalar('val/best_acc', trainer.best_acc, args.epochs)
+            if epoch % args.eval_interval == (args.eval_interval - 1):
+                trainer.run_epoch(epoch, split=VAL)
+
+    if not args.trainval:
+        trainer.run_epoch(trainer.args.epochs, split=VAL)
+        trainer.summary.writer.add_scalar('val/best_acc', trainer.best_acc, args.epochs)
+
     trainer.summary.writer.close()
     trainer.save_network()
 

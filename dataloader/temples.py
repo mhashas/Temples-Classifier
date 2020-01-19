@@ -12,6 +12,7 @@ from constants import *
 import util.custom_transforms as custom_transforms
 
 class Temples(data.Dataset):
+    """Class for the temples dataset."""
 
     NUM_CLASSES = 11
     CLASSES = ['Armenia', 'Australia', 'Germany', 'Hungary+Slovakia+Croatia', 'Indonesia-Bali', 'Japan', 'Malaysia+Indonesia', 'Portugal+Brazil', 'Russia', 'Spain', 'Thailand']
@@ -22,9 +23,24 @@ class Temples(data.Dataset):
 
 
     def __init__(self, args, split=TRAINVAL):
+        """
+        Loads the relevant dataset files based on the given split.
+
+        Parameters
+        ----------
+        args: argparse.ArgumentParser
+            Object that contains all the command line arguments
+        split : str
+            Current dataset split
+        """
+
         self.args = args
-        self.split = TRAINVAL # hardcoded for retrieving the files
-        self.dataset = self.make_dataset(split)
+
+        if split == TEST:
+            self.dataset = self.make_test_dataset(args.test_dir)
+        else:
+            self.split = TRAIN # hardcoded for retrieving the files
+            self.dataset = self.make_dataset(split)
         self.split = split
 
         if len(self.dataset) == 0:
@@ -34,26 +50,100 @@ class Temples(data.Dataset):
         self.transform = self.get_transforms()
 
     def __len__(self):
+        """
+        Computes the length of the dataset.
+
+        Returns
+        -------
+        int
+            Dataset length
+        """
+
         return len(self.dataset)
 
     def __getitem__(self, index):
-        image_path, label = self.dataset[index]
+        """
+        Retrieves the item in the dataset at the given index.
+
+        Parameters
+        ----------
+        index : int
+            Item index
+
+        Returns
+        -------
+        PIL Image
+            Input image
+        label | image_path
+        """
+
+        if self.split == TEST:
+            image_path = self.dataset[index]
+        else:
+            image_path, label = self.dataset[index]
+
         image = Image.open(image_path)
 
         if self.transform is not None:
             image = self.transform(image)
 
-        label = torch.Tensor([label]).long()
-
-        return image, label
+        if self.split == TEST:
+            image_path = image_path[image_path.find(self.args.test_dir) + len(self.args.test_dir):]
+            return image, image_path
+        else:
+            label = torch.Tensor([label]).long()
+            return image, label
 
     def get_class_weights(self):
+        """
+        Computes the class weights for the current dataset split.
+
+        Returns
+        -------
+        list
+            Class weights
+        """
+
         y_train = [item[1] for item in self.dataset]
         class_weights = class_weight.compute_class_weight('balanced', np.unique(y_train), y_train)
 
         return class_weights
 
+    def make_test_dataset(self, dir):
+        """
+       Loads the test dataset files.
+
+       Parameters
+       ----------
+       split : str
+
+       Returns
+       -------
+       list
+           Contains all the dataset files
+       """
+
+        current_dir = os.path.dirname(__file__)
+        dataset_path = os.path.join(current_dir, dir)
+        items = os.listdir(dataset_path)
+        items = [os.path.join(dataset_path, item) for item in items]
+
+        return items
+
     def make_dataset(self, split):
+        """
+        Loads the dataset files.
+
+        Parameters
+        ----------
+        split : str
+
+        Returns
+        -------
+        list
+            Contains all the dataset files
+        """
+
         current_dir = os.path.dirname(__file__)
         dataset_path = os.path.join(current_dir, self.ROOT, self.DATASET, self.split)
 
@@ -69,7 +159,7 @@ class Temples(data.Dataset):
 
         items = list(itertools.chain.from_iterable(items))
 
-        if split != TRAINVAL:
+        if split == TRAIN or split == VAL:
             x= [item[0] for item in items]
             y = [item[1] for item in items]
             x_train, x_val, y_train, y_val = model_selection.train_test_split(x, y, random_state=42, test_size=0.15)
@@ -82,6 +172,15 @@ class Temples(data.Dataset):
         return items
 
     def get_transforms(self):
+        """
+        Returns the transforms that are applied to the input.
+
+        Returns
+        -------
+        torchvision.compose
+            Composition of all the transformations
+        """
+
         if self.split == TRAIN or self.split == TRAINVAL:
             transforms = [
                 standard_transforms.Resize(self.args.resize),

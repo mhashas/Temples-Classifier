@@ -7,9 +7,11 @@ from torchvision.transforms import functional as F
 import numpy as np
 
 class Lambda(object):
-    """Apply a user-defined lambda as a transform.
+    """
+    Apply a user-defined lambda as a transform.
 
-    Args:
+    Parameters
+    ----------
         lambd (function): Lambda/function to be used for transform.
     """
 
@@ -25,6 +27,8 @@ class Lambda(object):
 
 
 class RandomGaussianBlur(object):
+    """Applies random gaussian blur to the image."""
+
     def __call__(self, image, label=None):
         if random.random() < 0.5:
             radius = random.random()
@@ -35,6 +39,8 @@ class RandomGaussianBlur(object):
         return image
 
 class RandomCrop(object):
+    """Crops a random patch from the image."""
+
     def __init__(self, size, padding=0):
         self.size = size
         self.padding = padding
@@ -60,10 +66,15 @@ class RandomCrop(object):
 
 class Normalize(object):
     """Normalize a tensor image with mean and standard deviation.
-    Args:
-        mean (tuple): means for each channel.
-        std (tuple): standard deviations for each channel.
+
+    Parameters
+    ----------
+    mean : tuple
+        means for each channel.
+    std : tuple
+        standard deviations for each channel.
     """
+
     def __init__(self, mean=(0., 0., 0.), std=(1., 1., 1.)):
         self.mean = mean
         self.std = std
@@ -78,9 +89,13 @@ class Normalize(object):
 
 class RandomRotate(object):
     """Randomly rotates a tensor
-    Args:
-        p (int): probability to rotate image
+
+    Parameters
+    ----------
+    p : int
+        probability to rotate image
     """
+
     def __init__(self, p):
         self.angles = [0, 90, 180, 270]
         self.probs = [1 - p, p / 3, p / 3, p / 3]
@@ -94,16 +109,18 @@ class RandomRotate(object):
 class ColorJitter(object):
     """Randomly change the brightness, contrast and saturation of an image.
 
-    Args:
-        brightness (float): How much to jitter brightness. brightness_factor
-            is chosen uniformly from [max(0, 1 - brightness), 1 + brightness].
-        contrast (float): How much to jitter contrast. contrast_factor
-            is chosen uniformly from [max(0, 1 - contrast), 1 + contrast].
-        saturation (float): How much to jitter saturation. saturation_factor
-            is chosen uniformly from [max(0, 1 - saturation), 1 + saturation].
-        hue(float): How much to jitter hue. hue_factor is chosen uniformly from
-            [-hue, hue]. Should be >=0 and <= 0.5.
+    Parameters
+    ----------
+    brightness : float
+        How much to jitter brightness. brightness_factor is chosen uniformly from [max(0, 1 - brightness), 1 + brightness].
+    contrast : float
+        How much to jitter contrast. contrast_factor is chosen uniformly from [max(0, 1 - contrast), 1 + contrast].
+    saturation : float
+        How much to jitter saturation. saturation_factor is chosen uniformly from [max(0, 1 - saturation), 1 + saturation].
+    hue : float
+        How much to jitter hue. hue_factor is chosen uniformly from [-hue, hue]. Should be >=0 and <= 0.5.
     """
+
     def __init__(self, brightness=0, contrast=0, saturation=0, hue=0):
         self.brightness = brightness
         self.contrast = contrast
@@ -116,10 +133,11 @@ class ColorJitter(object):
 
         Arguments are same as that of __init__.
 
-        Returns:
-            Transform which randomly adjusts brightness, contrast and
-            saturation in a random order.
+        Returns
+        -------
+            Transform which randomly adjusts brightness, contrast and saturation in a random order.
         """
+
         transforms = []
         if brightness > 0:
             brightness_factor = random.uniform(max(0, 1 - brightness), 1 + brightness)
@@ -149,12 +167,16 @@ class ColorJitter(object):
 
     def __call__(self, image):
         """
-        Args:
-            images (PIL Image): Input image.
+        Parameters
+        ----------
+        images : PIL Image
+            Input image
 
-        Returns:
+        Returns
+        -------
             PIL Image: Color jittered image.
         """
+
         transforms = self.get_params(self.brightness, self.contrast,
                                     self.saturation, self.hue)
 

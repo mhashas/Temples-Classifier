@@ -6,9 +6,18 @@ import math
 from constants import *
 
 class ParserOptions():
-    """This class defines options that are used by the program"""
+    """
+    This class defines options that are used by the program
+
+    Methods
+    -------
+    parse()
+        Parses the command line arguments
+    """
 
     def __init__(self):
+        """Initializes the parser options object."""
+
         parser = argparse.ArgumentParser(description='PyTorch Semantic Video Segmentation training')
 
         # model specific
@@ -33,14 +42,18 @@ class ParserOptions():
         parser.add_argument('--epochs', type=int, default=200, metavar='N', help='number of epochs to train (default: auto)')
         parser.add_argument('--eval-interval', type=int, default=1, help='evaluation interval (default: 1)')
         parser.add_argument('--trainval', type=int, default=0, choices=[0,1], help='determines whether whe should use validation images as well for training')
-        parser.add_argument('--debug', type=int, default=0)
+        parser.add_argument('--debug', type=int, default=1)
         parser.add_argument('--results_root', type=str, default='..')
-        parser.add_argument('--results_dir', type=str, default='results_good_val', help='models are saved here')
+        parser.add_argument('--results_dir', type=str, default='results_final', help='models are saved here')
         parser.add_argument('--save_dir', type=str, default='saved_models')
+        parser.add_argument('--pretrained_models_dir', type=str, default='pretrained_models', help='root dir of the pretrained models location')
+        parser.add_argument('--test_dir', type=str, default='../../dataset/test/', help='root folder of the test images')
 
         parser.add_argument('--pretrained', type=int, default=1, choices=[0,1], help='if we should use pretrained network or not')
         parser.add_argument('--normalize_input', type=int, default=0, choices=[0,1], help='if we should normalize the images with the imagenet mean and std')
         parser.add_argument('--random_erasing', type=int, default=0, choices=[0,1], help='if we should use random erasing as part of our preprocessing')
+        parser.add_argument('--inference', type=int, default=0, choices=[0,1], help='if we are in inference mode or not')
+
         args = parser.parse_args()
 
         if args.debug:
@@ -58,4 +71,16 @@ class ParserOptions():
         self.args = args
 
     def parse(self):
+        """
+        Parses the command line arguments.
+
+        Parameters
+        ----------
+
+        Returns
+        -------
+        argparse.ArgumentParser
+            Object that contains all the command line arguments
+        """
+
         return self.args

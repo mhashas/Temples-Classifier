@@ -5,7 +5,20 @@ from torchvision import models
 from constants import *
 
 class ResNet(nn.Module):
+    """
+    ResNet model from "Deep Residual Learning for Image Recognition" <https://arxiv.org/pdf/1512.03385.pdf>`.
+    """
+
     def __init__(self, args):
+        """
+        Initializes the ResNet based on the provided arguments.
+
+        Parameters
+        ----------
+        args: argparse.ArgumentParser
+            Object that contains all the command line arguments
+        """
+
         super(ResNet, self).__init__()
         self.args = args
 
@@ -22,10 +35,32 @@ class ResNet(nn.Module):
 
 
     def forward(self, x):
+        """
+        Computes a forward pass through the network.
+
+        Parameters
+        ----------
+        x : torch.Tensor
+            Input features
+
+        Returns:
+        torch.Tensor
+            Output features
+        """
+
         x = self.backbone(x)
         x = self.avgpool(x)
 
         return x
 
     def get_feature_maps_size(self):
+        """
+        Flattened size of the feature maps from the last layer.
+
+        Returns
+        -------
+        int
+            Flattened size of the feature maps from the last layer
+        """
+
         return 2048 * 1 * 1

@@ -19,14 +19,29 @@ class LR_Scheduler(object):
 
     Poly mode: ``lr = baselr * (1 - iter/maxiter) ^ 0.9``
 
-    Args:
-        args:
-          :attr:`args.lr_scheduler` lr scheduler mode (`cos`, `poly`),
-          :attr:`args.lr` base learning rate, :attr:`args.epochs` number of epochs,
-          :attr:`args.lr_step`
+    Attributes
+    ----------
+    mode: str
+        Learning rate scheduler mode (`cos`, `poly`)
+    lr : float
+        Base learning rate
+    lr_step : float
+        Learning rate step
+    iters_per_epoch : int
+        Number of iterations per epoch
+    N : int
+        Number of total iterations
+    epoch : int
+        Current epoch
+    warmup_epochs : int
+        Number of warmup epochs
 
-        iters_per_epoch: number of iterations per epoch
+    Methods
+    -------
+    _adjust_learning_rate(optimizer, lr)
+        Adjusts the learning rate.
     """
+
     def __init__(self, mode, base_lr, num_epochs, iters_per_epoch=0,
                  lr_step=0, warmup_epochs=0):
         self.mode = mode
@@ -41,6 +56,21 @@ class LR_Scheduler(object):
         self.warmup_iters = warmup_epochs * iters_per_epoch
 
     def __call__(self, optimizer, i, epoch, best_pred):
+        """
+        Adjusts the learning rate.
+
+        Parameters
+        ----------
+        optimizer : torch.optim.optimizer
+            Neural network training optimizer
+        i : int
+            Current epoch iteration
+        epoch : int
+            Current epoch
+        best_pred : float
+            Best prediction so far
+        """
+
         T = epoch * self.iters_per_epoch + i
         if self.mode == 'cos':
             lr = 0.5 * self.lr * (1 + math.cos(1.0 * T / self.N * math.pi))
@@ -61,6 +91,17 @@ class LR_Scheduler(object):
         self._adjust_learning_rate(optimizer, lr)
 
     def _adjust_learning_rate(self, optimizer, lr):
+        """
+        Adjusts the learning rate.
+
+        Parameters
+        ----------
+        optimizer : torch.optim.optimizer
+            Neural network training optimizer
+        lr : float
+            Current learning rate
+        """
+
         if len(optimizer.param_groups) == 1:
             optimizer.param_groups[0]['lr'] = lr
         else:
